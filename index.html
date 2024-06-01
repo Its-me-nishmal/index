@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Random Chat App</title>
+</head>
+<body>
+    <h1>Random Chat App</h1>
+    <div id="chat">
+        <div id="messages"></div>
+        <input type="text" id="messageInput" placeholder="Type your message...">
+        <button id="sendButton">Send</button>
+    </div>
+
+    <script src="https://simplewebrtc.com/latest-v3.js"></script>
+    <script >
+    // Initialize the SimpleWebRTC
+const webrtc = new SimpleWebRTC({
+    localVideoEl: '',
+    remoteVideosEl: '',
+    autoRequestMedia: true
+});
+
+let connected = false;
+
+// Create a random room name for each user
+const room = 'random-chat-' + Math.floor(Math.random() * 100000);
+
+// Join the room
+webrtc.on('readyToCall', () => {
+    if (!connected) {
+        webrtc.joinRoom(room);
+        connected = true;
+        console.log('Joined room:', room);
+    }
+});
+
+// Handle incoming messages
+webrtc.connection.on('message', message => {
+    if (message.type === 'chat') {
+        displayMessage('Peer', message.payload);
+    }
+});
+
+// Send message when the send button is clicked
+document.getElementById('sendButton').addEventListener('click', sendMessage);
+
+// Send message when Enter key is pressed
+document.getElementById('messageInput').addEventListener('keypress', event => {
+    if (event.key === 'Enter') {
+        sendMessage();
+    }
+});
+
+function sendMessage() {
+    const messageInput = document.getElementById('messageInput');
+    const message = messageInput.value.trim();
+    if (message) {
+        displayMessage('You', message);
+        webrtc.sendDirectlyToAll(room, 'chat', message);
+        messageInput.value = '';
+    }
+}
+
+function displayMessage(sender, message) {
+    const messagesDiv = document.getElementById('messages');
+    const messageElement = document.createElement('div');
+    messageElement.textContent = `${sender}: ${message}`;
+    messagesDiv.appendChild(messageElement);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+    </script>
+</body>
+</html>
